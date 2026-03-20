@@ -1,0 +1,45 @@
+version: '3.8'
+
+# docker-compose para DESARROLLO LOCAL con MySQL incluido
+# Uso: docker-compose -f docker-compose.local.yml up
+
+services:
+  api:
+    build: .
+    container_name: sportmob-api-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=development
+      # Override para DB local
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=sportmob_v2
+      - DB_USER=root
+      - DB_PASSWORD=rootroot
+    depends_on:
+      - db
+    networks:
+      - sportmob-network
+
+  db:
+    image: mysql:8.0
+    container_name: sportmob-mysql-local
+    environment:
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: sportmob_v2
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - sportmob-network
+
+volumes:
+  mysql_data:
+
+networks:
+  sportmob-network:
+    driver: bridge

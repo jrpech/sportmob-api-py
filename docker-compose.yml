@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: sportmob-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=development
+    env_file:
+      - .env
+    networks:
+      - sportmob-network
+
+networks:
+  sportmob-network:
+    driver: bridge

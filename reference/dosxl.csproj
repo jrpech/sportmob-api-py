@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>aspnet-tamara_api-63A4D795-7C31-4616-ABD7-8D35EFADD7FB</UserSecretsId>
+    <RootNamespace>dosxl</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'simex_api' " />
+  <ItemGroup>
+    <Compile Remove="Models\Mapping\UserMap.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureADB2C.UI" Version="3.1.26" />
+    <PackageReference Include="PagedList.Mvc" Version="4.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="NHibernate" Version="5.3.12" />
+    <PackageReference Include="FluentNHibernate" Version="3.1.0" />
+    <PackageReference Include="MySql.Data" Version="8.0.30" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Models\" />
+    <None Remove="Models\Mapping\" />
+    <None Remove="Utils\" />
+    <None Remove="Swashbuckle.AspNetCore" />
+    <None Remove="Models\Request\" />
+    <None Remove="Models\Response\" />
+    <None Remove="NHibernate" />
+    <None Remove="FluentNHibernate" />
+    <None Remove="Models\Repository\" />
+    <None Remove="MySql.Data" />
+    <None Remove="Models\Models\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\images\" />
+    <Folder Include="Utils\" />
+    <Folder Include="Models\Response\" />
+  </ItemGroup>
+</Project>
