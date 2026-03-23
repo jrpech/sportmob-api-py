@@ -81,8 +81,8 @@ class HistoriaService:
             usuario_id=usuario_id
         )
         
-        # Obtener URL pública
-        url_archivo = storage_service.obtener_url_publica(ruta_relativa)
+        # Guardar solo la ruta relativa (sin base URL)
+        url_archivo = ruta_relativa
         
         # Crear miniatura solo para imágenes
         url_miniatura = None
@@ -108,7 +108,8 @@ class HistoriaService:
                 )
                 crear_miniatura(ruta_completa, ruta_miniatura_completa)
                 
-                url_miniatura = storage_service.obtener_url_publica(ruta_miniatura_relativa)
+                # Guardar solo la ruta relativa (sin base URL)
+                url_miniatura = ruta_miniatura_relativa
                 
             except Exception as e:
                 print(f"Error creando miniatura: {str(e)}")

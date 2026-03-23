@@ -166,20 +166,26 @@ class StorageService:
     
     def obtener_url_publica(self, ruta_relativa: str) -> str:
         """
-        Obtiene la URL pública del archivo
+        Obtiene la URL completa del archivo (endpoint protegido)
+        
+        NOTA: Actualmente NO se usa para guardar en BD.
+        Las rutas se guardan como paths relativos en la BD.
+        El cliente debe construir la URL completa usando:
+        - Base URL del API
+        - Endpoint protegido: /api/media/{ruta_relativa}
         
         Args:
             ruta_relativa: Ruta relativa del archivo
         
         Returns:
-            URL completa del archivo
+            URL completa del archivo (endpoint protegido)
         """
         if self.storage_type == "s3" and settings.CDN_URL:
-            # Futuro: retornar URL de CDN
+            # Futuro: retornar URL de CDN con signed URL
             return f"{settings.CDN_URL}/{ruta_relativa}"
         else:
-            # Local: retornar URL del servidor
-            return f"{settings.BASE_URL}/uploads/{ruta_relativa}"
+            # Local: retornar URL del endpoint protegido
+            return f"{settings.BASE_URL}/api/media/{ruta_relativa}"
     
     def obtener_ruta_completa(self, ruta_relativa: str) -> str:
         """
