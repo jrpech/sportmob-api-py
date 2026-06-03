@@ -43,6 +43,7 @@ async def crear_historia(
     Requiere autenticación JWT.
     """
     try:
+        
         # Validar tipo de archivo
         if not archivo.content_type:
             raise ValueError("Tipo de archivo no especificado")

@@ -11,15 +11,15 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_MINUTES: int = 43200  # 30 días
     
     # Database Configuration
-    DB_HOST: str = "db"
+    DB_HOST: str = "146.190.144.229"
     DB_PORT: int = 3306
-    DB_NAME: str = "pruebasliguilla"
-    DB_USER: str = "root"
-    DB_PASSWORD: str = "rootroot"
+    DB_NAME: str = "sportmob_v2"
+    DB_USER: str = "remote-user"
+    DB_PASSWORD: str = "Sp0rtm0b2024"
     
     # API Configuration
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = 8000
+    API_PORT: int = 5001
     DEBUG: bool = True
     
     # CORS Origins
@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     
     # Almacenamiento de Archivos
     STORAGE_TYPE: str = "local"  # "local" o "s3"
-    UPLOAD_DIR: str = "/app/uploads"
+    UPLOAD_DIR: str = "uploads"
     BASE_URL: str = "http://localhost:8000"  # URL base para acceder a archivos
     MAX_FILE_SIZE_MB: int = 50  # 50 MB
     

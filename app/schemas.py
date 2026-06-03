@@ -158,3 +158,84 @@ class MisHistoriasResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# ============================================================================
+# SCHEMAS PARA JUGADOR
+# ============================================================================
+
+class JugadorSchema(BaseModel):
+    """Schema de jugador compatible con el contrato de .NET."""
+    id: int = 0
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    fechaNacimiento: Optional[str] = None
+    documento: Optional[str] = None
+    peso: Optional[float] = None
+    altura: Optional[float] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    posicion: Optional[str] = None
+    talla: Optional[str] = None
+    noJugador: Optional[int] = None
+    nombreJersy: Optional[str] = None
+    foto: Optional[str] = "user_default.png"
+    equipoID: Optional[int] = None
+    estado: Optional[str] = "PENDIENTE"
+    codigoPostal: Optional[int] = Field(None, alias="CodigoPostal")
+    fechaRegistro: Optional[str] = None
+    esCapitan: Optional[bool] = False
+    equipo: Optional[int] = None
+    asistencia: bool = False
+    diasExpulsado: int = 0
+    nuAsistencia: int = 0
+    segfoto: Optional[str] = None
+    numero: Optional[int] = None
+    puntos: Optional[int] = None
+    ultimaModificacion: Optional[datetime] = None
+    usuarioC: Optional[int] = None
+    torneoID: Optional[int] = None
+    categoriaID: Optional[int] = None
+    importe: Optional[float] = None
+    pagado: bool = False
+    bloquearJugador: bool = False
+    claveUnica: Optional[str] = None
+    cantidadTorneos: int = 0
+    registroComo: Optional[str] = None
+    clavedeInvitacion: Optional[str] = None
+    usuarioJugador: bool = False
+    puntosEstrella: float = 0
+    puntosJugador: float = 0
+    puntosSemana: float = 0
+    tipoDeporte: Optional[str] = "FUTBOL"
+    usuarioJugadorID: Optional[int] = None
+    equipos: List[Any] = Field(default_factory=list)
+    asistenciaJugador: bool = False
+    metodoPago: Optional[str] = Field(None, alias="modoPago")
+    pagosJugador: List[Any] = Field(default_factory=list)
+    puntosRanking: int = 0
+    refuerzo: Optional[bool] = None
+    origenEquipoRefuerzo: Optional[str] = None
+    statusInvitacion: bool = False
+    ptsRanking: int = 0
+    categoriaName: str = ""
+    genero: Optional[str] = None
+    jugadorInsignia: Optional[bool] = None
+    origen : Optional[str] = "APP"  # Agregamos el campo de origen para saber si es jugador o usuario
+    contrasenia: Optional[str] = None  # Agregamos el campo de contraseña para el registro
+    tokenFirebase: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+# ============================================================================
+# SCHEMAS PARA LOGIN DE JUGADOR
+# ============================================================================
+
+class LoginJugadorRequest(BaseModel):
+    """Request para login de jugador - acepta correo o teléfono."""
+    usuario_telefono: str = ""
+    contrasena: str = ""
+    tokenFirebase: str = ""
+

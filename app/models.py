@@ -1,9 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, BigInteger, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 import enum
-
 
 class Usuario(Base):
     """
@@ -166,4 +165,130 @@ class HistoriaReaccion(Base):
             "usuario_id": self.usuario_id,
             "tipo_reaccion": self.tipo_reaccion.value if self.tipo_reaccion else None,
             "fecha_reaccion": self.fecha_reaccion.isoformat() if self.fecha_reaccion else None
+        }
+
+
+class Cuenta(Base):
+    """
+    Modelo de Cuenta que se encuentran en sportmob
+    """
+    __tablename__ = "cuenta"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(255))
+    estado = Column(Boolean, default= False)
+    noEstadisticas = Column(Integer, default=0)
+    token = Column(String(255), unique=True, index=True)
+    mostrarEstadisticas = Column(Boolean, default=False)
+    permiteRegistroJugador = Column(Boolean, default=False)
+    fotoCuenta = Column(String(500))
+    permitirDados = Column(Boolean, default=False)
+    penalDtMomentoPartido = Column(Boolean, default=False)
+    ignorarCanchasAuto = Column(Boolean, default=False)
+    penalesDTSegundoTiempo = Column(Boolean, default=False)
+    considerarAmarillasEsta = Column(Boolean, default=False)
+    ptsVictoriaGrupo = Column(Integer, default=3)
+    pts4toLugar = Column(Integer, default=0)
+    pts3erLugar = Column(Integer, default=0)
+    ptsFinalista = Column(Integer, default=0)
+    ptsCampeon = Column(Integer, default=0)
+    ptsUploadCategory = Column(Integer, default=100)
+    ignorarVolado = Column(Boolean, default=False)
+
+    def dict(self):
+        """Convertir el modelo a diccionario"""
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "noEstadisticas": self.noEstadisticas,
+            "token": self.token,
+            "mostrarEstadisticas": self.mostrarEstadisticas,
+            "permiteRegistroJugador": self.permiteRegistroJugador,
+            "fotoCuenta": self.fotoCuenta,
+            "permitirDados": self.permitirDados,
+            "penalDtMomentoPartido": self.penalDtMomentoPartido,
+            "ignorarCanchasAuto": self.ignorarCanchasAuto,
+            "penalesDTSegundoTiempo": self.penalesDTSegundoTiempo,
+            "considerarAmarillasEsta": self.considerarAmarillasEsta,
+            "ptsVictoriaGrupo": self.ptsVictoriaGrupo,
+            "pts4toLugar": self.pts4toLugar,
+            "pts3erLugar": self.pts3erLugar,
+            "ptsFinalista": self.ptsFinalista,
+            "ptsCampeon": self.ptsCampeon,
+            "ptsUploadCategory": self.ptsUploadCategory,
+            "ignorarVolado": self.ignorarVolado
+        }
+    
+
+#Modelo Jugador sportmob
+class Jugador(Base):
+    """
+    Modelo de Jugador que se encuentran en sportmob
+    """
+    __tablename__ = "jugador"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(45), nullable=True)
+    apellido = Column(String(45), nullable=True)
+    fechaNacimiento = Column(String(45), nullable=True)
+    documento = Column(String(500), nullable=True)
+    peso = Column(Float, nullable=True)
+    altura = Column(Float, nullable=True)
+    email = Column(String(45), nullable=True)
+    telefono = Column(String(45), nullable=True)
+    posicion = Column(String(45), nullable=True)
+    talla = Column(String(45), nullable=True)
+    noJugador = Column(Integer, nullable=True)
+    nombreJersy = Column(String(45), nullable=True)
+    foto = Column(String(450), nullable=True)
+    equipoID = Column(Integer, nullable=True)
+    equipo = Column(Integer, nullable=True)
+    estado = Column(String(45), nullable=True)
+    codigoPostal = Column(Integer, nullable=True)
+    fechaRegistro = Column(String(500), nullable=True)
+    esCapitan = Column(Boolean, nullable=True)
+    diasExpulsado = Column(Integer, nullable=True)
+    segfoto = Column(String(200), nullable=True)
+    ultimaModificacion = Column(DateTime, nullable=True)
+    idUsuario = Column(Integer, nullable=True)
+    usuarioC = Column(Integer, nullable=True)
+    modoPago = Column(String(20), nullable=True)
+    torneoID = Column(Integer, nullable=True)
+    categoriaID = Column(Integer, nullable=True)
+    claveUnica = Column(String(200), nullable=True)
+    importe = Column(Float, nullable=True)
+    pagado = Column(Boolean, nullable=True)
+    registroComo = Column(String(45), nullable=True)
+    clavedeInvitacion = Column(String(45), nullable=True)
+    puntosEstrella = Column(Float, nullable=True, default=0)
+    puntosSemana = Column(Float, nullable=True, default=0)
+    tipoDeporte = Column(String(45), nullable=True, default="FUTBOL")
+    usuarioJugadorID = Column(Integer, nullable=True)
+    puntosRanking = Column(Integer, nullable=True, default=0)
+    refuerzo = Column(Boolean, nullable=True)
+    origenEquipoRefuerzo = Column(String(250), nullable=True)
+    fotoAlter = Column(String(450), nullable=True)
+    genero = Column(String(450), nullable=True)
+    jugadorInsignia = Column(Boolean, nullable=True)
+    contrasenia = Column(String(255), nullable=True)  # Agregamos el campo de contraseña
+    origen = Column(String(100), nullable=True)  # Agregamos el campo de origen para saber si es jugador o usuario
+
+
+class UsuarioDispositivos(Base):
+    """
+    Modelo de tokens de dispositivos por usuario (Firebase).
+    """
+    __tablename__ = "usuario_dispositivos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(500), nullable=False)
+    usuarioID = Column(Integer, nullable=False, index=True)
+    fechaRegistro = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    def dict(self):
+        return {
+            "id": self.id,
+            "token": self.token,
+            "usuarioID": self.usuarioID,
+            "fechaRegistro": self.fechaRegistro.isoformat() if self.fechaRegistro else None,
         }

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from app.config import settings
-from app.routers import login, historia, media
+from app.routers import login, historia, media, cuenta, jugador
 
 # Crear instancia de FastAPI
 app = FastAPI(
@@ -33,7 +33,9 @@ upload_dir.mkdir(parents=True, exist_ok=True)
 # Incluir routers
 app.include_router(login.router)
 app.include_router(historia.router)
+app.include_router(cuenta.router)  # Controlador para gestión de cuentas en sportmob
 app.include_router(media.router)  # Router para archivos protegidos
+app.include_router(jugador.router)  # Router para gestión de jugadores
 
 
 @app.get("/")

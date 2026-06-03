@@ -1,9 +1,13 @@
 """
 Utilidades para procesamiento de imágenes y videos
 """
+import base64
+import binascii
 from PIL import Image
 from typing import Tuple, Optional
 import os
+from pathlib import Path
+from datetime import datetime
 from app.config import settings
 
 
@@ -102,3 +106,31 @@ def sanitizar_nombre_archivo(nombre: str) -> str:
         nombre_limpio = nombre_limpio.replace(char, '_')
     
     return nombre_limpio
+
+
+def save_image_base64(base64img: str, id_value: int, texto: str, tipo: str) -> str:
+    """
+    Guarda una imagen en base64 en Resources/<tipo> y devuelve el nombre del archivo.
+    Si ocurre un error, devuelve un string con prefijo "Error:" para compatibilidad.
+    """
+    try:
+        folder_path = Path.cwd() / "Resources" / tipo
+        folder_path.mkdir(parents=True, exist_ok=True)
+
+        # Soporta formatos como: data:image/png;base64,AAAA...
+        base64_clean = base64img.split(",", 1)[1] if "," in base64img else base64img
+        image_bytes = base64.b64decode(base64_clean, validate=True)
+
+        now = datetime.now()
+        time_part = f"{now.hour}-{now.minute}-{now.second}-{int(now.microsecond / 1000)}"
+        image_name = f"{texto}{id_value}{time_part}.png"
+
+        file_path = folder_path / image_name
+        with open(file_path, "wb") as image_file:
+            image_file.write(image_bytes)
+
+        return image_name
+    except (binascii.Error, ValueError) as ex:
+        return f"Error: base64 inválido ({str(ex)})"
+    except Exception as ex:
+        return f"Error: {str(ex)}"
