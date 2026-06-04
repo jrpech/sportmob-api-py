@@ -1,30 +1,32 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Enum, ForeignKey, BigInteger, Float
-from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.database import Base
 import enum
+
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
+from app.database import Base
+
 
 class Usuario(Base):
     """
-    Modelo Usuario compatible con la base de datos de .NET
+    Modelo Usuario compatible con la base de datos de .NET.
     """
+
     __tablename__ = "usuario"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255))
     apellido = Column(String(255))
     correo = Column(String(255), unique=True, index=True)
-    contrasenia = Column(String(255))  # Nombre igual que en .NET
+    contrasenia = Column(String(255))
     telefono = Column(String(50))
     estado = Column(String(100))
     foto = Column(String(500))
     origen = Column(String(100))
-    
-    # Relaciones
+
     historias = relationship("Historia", back_populates="usuario", cascade="all, delete-orphan")
-    
+
     def dict(self):
-        """Convertir el modelo a diccionario sin la contraseña"""
         return {
             "id": self.id,
             "nombre": self.nombre,
@@ -33,61 +35,52 @@ class Usuario(Base):
             "telefono": self.telefono,
             "estado": self.estado,
             "foto": self.foto,
-            "origen": self.origen
+            "origen": self.origen,
         }
 
 
 class TipoHistoria(str, enum.Enum):
-    """Enum para tipo de historia"""
     imagen = "imagen"
     video = "video"
 
 
 class Historia(Base):
     """
-    Modelo de Historia (Story tipo Instagram)
+    Modelo de Historia (Story tipo Instagram).
     """
+
     __tablename__ = "historia"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Tipo de contenido
+
     tipo = Column(Enum(TipoHistoria), nullable=False)
-    
-    # URLs de archivos
+
     url_archivo = Column(String(500), nullable=False)
     url_miniatura = Column(String(500))
     nombre_archivo = Column(String(255))
-    
-    # Contenido
+
     descripcion = Column(Text)
-    duracion_segundos = Column(Integer, default=5)  # Duración en la app
-    
-    # Metadata del archivo
+    duracion_segundos = Column(Integer, default=5)
+
     ancho = Column(Integer)
     alto = Column(Integer)
     tamano_bytes = Column(BigInteger)
-    duracion_video = Column(Integer)  # Para videos, en segundos
-    
-    # Temporalidad
+    duracion_video = Column(Integer)
+
     fecha_creacion = Column(DateTime, default=datetime.utcnow, index=True)
-    fecha_expiracion = Column(DateTime)  # NULL si es destacada
+    fecha_expiracion = Column(DateTime)
     activa = Column(Boolean, default=True, index=True)
-    
-    # Feature especial: Destacada (no expira)
+
     destacada = Column(Boolean, default=False, index=True)
-    
-    # Estadísticas
+
     vistas_totales = Column(Integer, default=0)
-    
-    # Relaciones
+
     usuario = relationship("Usuario", back_populates="historias")
     vistas = relationship("HistoriaVista", back_populates="historia", cascade="all, delete-orphan")
     reacciones = relationship("HistoriaReaccion", back_populates="historia", cascade="all, delete-orphan")
-    
+
     def dict(self):
-        """Convertir a diccionario"""
         return {
             "id": self.id,
             "usuario_id": self.usuario_id,
@@ -102,40 +95,38 @@ class Historia(Base):
             "fecha_expiracion": self.fecha_expiracion.isoformat() if self.fecha_expiracion else None,
             "activa": self.activa,
             "destacada": self.destacada,
-            "vistas_totales": self.vistas_totales
+            "vistas_totales": self.vistas_totales,
         }
 
 
 class HistoriaVista(Base):
     """
-    Registro de visualizaciones de historias
+    Registro de visualizaciones de historias.
     """
+
     __tablename__ = "historia_vista"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     historia_id = Column(Integer, ForeignKey("historia.id", ondelete="CASCADE"), nullable=False, index=True)
     usuario_id = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False)
     fecha_vista = Column(DateTime, default=datetime.utcnow, index=True)
-    
-    # Analytics
+
     tiempo_visto_segundos = Column(Integer, default=0)
     completo = Column(Boolean, default=False)
-    
-    # Relaciones
+
     historia = relationship("Historia", back_populates="vistas")
-    
+
     def dict(self):
         return {
             "id": self.id,
             "historia_id": self.historia_id,
             "usuario_id": self.usuario_id,
             "fecha_vista": self.fecha_vista.isoformat() if self.fecha_vista else None,
-            "completo": self.completo
+            "completo": self.completo,
         }
 
 
 class TipoReaccion(str, enum.Enum):
-    """Enum para tipo de reacción"""
     like = "like"
     love = "love"
     fire = "fire"
@@ -145,38 +136,39 @@ class TipoReaccion(str, enum.Enum):
 
 class HistoriaReaccion(Base):
     """
-    Reacciones a historias
+    Reacciones a historias.
     """
+
     __tablename__ = "historia_reaccion"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     historia_id = Column(Integer, ForeignKey("historia.id", ondelete="CASCADE"), nullable=False, index=True)
     usuario_id = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False)
     tipo_reaccion = Column(Enum(TipoReaccion), default=TipoReaccion.like)
     fecha_reaccion = Column(DateTime, default=datetime.utcnow)
-    
-    # Relaciones
+
     historia = relationship("Historia", back_populates="reacciones")
-    
+
     def dict(self):
         return {
             "id": self.id,
             "historia_id": self.historia_id,
             "usuario_id": self.usuario_id,
             "tipo_reaccion": self.tipo_reaccion.value if self.tipo_reaccion else None,
-            "fecha_reaccion": self.fecha_reaccion.isoformat() if self.fecha_reaccion else None
+            "fecha_reaccion": self.fecha_reaccion.isoformat() if self.fecha_reaccion else None,
         }
 
 
 class Cuenta(Base):
     """
-    Modelo de Cuenta que se encuentran en sportmob
+    Modelo de Cuenta que se encuentran en sportmob.
     """
+
     __tablename__ = "cuenta"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255))
-    estado = Column(Boolean, default= False)
+    estado = Column(Boolean, default=False)
     noEstadisticas = Column(Integer, default=0)
     token = Column(String(255), unique=True, index=True)
     mostrarEstadisticas = Column(Boolean, default=False)
@@ -196,7 +188,6 @@ class Cuenta(Base):
     ignorarVolado = Column(Boolean, default=False)
 
     def dict(self):
-        """Convertir el modelo a diccionario"""
         return {
             "id": self.id,
             "nombre": self.nombre,
@@ -216,17 +207,17 @@ class Cuenta(Base):
             "ptsFinalista": self.ptsFinalista,
             "ptsCampeon": self.ptsCampeon,
             "ptsUploadCategory": self.ptsUploadCategory,
-            "ignorarVolado": self.ignorarVolado
+            "ignorarVolado": self.ignorarVolado,
         }
-    
 
-#Modelo Jugador sportmob
+
 class Jugador(Base):
     """
-    Modelo de Jugador que se encuentran en sportmob
+    Modelo de Jugador que se encuentran en sportmob.
     """
+
     __tablename__ = "jugador"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(45), nullable=True)
     apellido = Column(String(45), nullable=True)
@@ -270,14 +261,15 @@ class Jugador(Base):
     fotoAlter = Column(String(450), nullable=True)
     genero = Column(String(450), nullable=True)
     jugadorInsignia = Column(Boolean, nullable=True)
-    contrasenia = Column(String(255), nullable=True)  # Agregamos el campo de contraseña
-    origen = Column(String(100), nullable=True)  # Agregamos el campo de origen para saber si es jugador o usuario
+    contrasenia = Column(String(255), nullable=True)
+    origen = Column(String(100), nullable=True)
 
 
 class UsuarioDispositivos(Base):
     """
     Modelo de tokens de dispositivos por usuario (Firebase).
     """
+
     __tablename__ = "usuario_dispositivos"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,0 +1,371 @@
+Explicacion base para armar calendario de juegos
+
+Para armar un calendario de juegos, pueden existir uno o mas torneos registrados, la fuente base para armar roles de juegos, 
+parten de lo siguiente:
+
+- El torneo posee una fecha de inicio el cual nos servira para el inicio de la fecha de los partidos
+
+
+Las espacios donde se podran disputar los juegos estan dados de la siguiente manera
+
+Para fines practicos los torneos inician y finalizan iguales.
+
+El modelo cancha donde se mantienen los registros de canchas tiene relacion a una cuentaId, la tabla figura asi
+
+La tabla se llama asi en la base de datos sportmob_v2.cancha
+
+ID                INT PK
+- nombreCancha      VARCHAR(45)
+- ubicacionCancha   VARCHAR(100)
+- estadoCancha      TINYINT
+- ultimaModificacion DATETIME
+- idUsuario         INT
+- usuarioC          INT
+- cuentaId          INT
+- fechas            INT
+
+Cada cancha tiene una relacion de fechas que son dias que acepta cada cancha, la tabla se encuentra asi
+
+La tabla se llama asi en la base de datos sportmob_v2.fechas
+
+- id (INT, PK)
+- dia (VARCHAR(150)) --> aqui va el dia que puede ser Lunes, Martes, Miercoles, Jueves, Viernes, Sabado, Domingo
+- horarios (INT) --> este va null siempre
+- categoriaID (INT) --> este valor siempre puede ser cero
+- canchaID (INT) --> esta columna es la relacion directa a la cancha
+
+
+Ahora cada fechas tiene una relacion a una tabla que se llama horarios
+
+La tabla se llama asi en la base de datos sportmob_v2.horarios
+
+- id (INT, PK)
+- horario (VARCHAR(150)) --> este valor va en este formato 0001-01-01T00:00:00
+- fechaID (INT) --> esta columna es la relacion directa a la fechas
+
+
+Hasta este punto esta es la forma en la que se pueden obtener las disponibilidades por cuentaId
+
+Ahora para conocer como estan los grupos por cada torneo, estos estan integrados de la siguiente forma
+
+Cada torneo tiene una configuracion para conocer cuantos grupos va a tener
+
+La tabla se llama asi en la base de datos sportmob_v2.torneo
+
+Descripción:
+Representa un torneo de pádel o deporte similar. Contiene la configuración general, estructura de grupos, fechas, costos y reglas de generación de partidos.
+
+Campos principales:
+
+Identificación
+- id (INT, PK)
+- nombre (VARCHAR)
+- tipoDeporte (VARCHAR)
+- estado (TINYINT)
+
+Estructura del torneo
+- categorias (INT)
+- noGrupos (INT)
+- equiposPorgrupo (INT)
+- parejasEnGrupos (INT)
+- noJornadas (INT)
+- liguilla (TINYINT)
+- cantidadEquiposLiguilla (INT)
+- aplicaPlayIn (TINYINT)
+
+Fechas
+- fechaInicio (VARCHAR)
+- fechaFin (VARCHAR)
+- FaseGrupoFin (DATETIME)
+- diasJuego (VARCHAR)
+- horaInicioTorneo (VARCHAR)
+
+Inscripciones
+- cerrarInscripciones (TINYINT)
+- cerrarRegistrosPadel (TINYINT)
+
+Costos
+- preventa (DOUBLE)
+- venta (DOUBLE)
+- finPreventa (VARCHAR)
+- tipoPago (VARCHAR)
+
+Configuración de partidos
+- permiteEmpate (TINYINT)
+- cantidadSets (INT)
+- numeroJuegos (INT)
+- numeroJuegosTiebreak (INT)
+- modoDesempateScore (VARCHAR)
+- tiempoUsoCanchas (VARCHAR)
+
+Disponibilidad y calendarización
+- solicitarHorario (TINYINT)
+- horasAntesNotificar (INT)
+
+Generación automática
+- tipoGeneracion (INT)
+- dividirRR (TINYINT)
+- noGruposRR (INT)
+
+Arbitraje
+- tieneArbitraje (TINYINT)
+- montoArbitraje (DOUBLE)
+
+Puntuación
+- imc (DOUBLE)
+- pmr (DOUBLE)
+
+Estado y control
+- finalizarTorneo (TINYINT)
+- ultimaModificacion (DATETIME)
+- usuarioC (INT)
+
+Web
+- showWebView (TINYINT)
+- urlTorneo (VARCHAR)
+
+Las columnas con las que se puede conocer como esta configurado si es por grupos o un solo grupo son
+- dividirRR (TINYINT) -> si este valor esta en true, el noGruposRR tiene un numero distinto o mayor a 1
+- noGruposRR (INT) -> este valor contiene un numero distinto o mayor a 1
+
+actualmente yo tengo un metodo en c# con el que puedo obtener los grupos para un torneo
+
+//Metodo que se encarga de buscar a las parejas del torneo separando por grupos si esta aplicado desde el torneo
+public List<Grupo> getParejasRRByTorneo(int torneoID)
+{
+    //Repositorios
+    using var equipoR = new EquipoRepository();
+    using var torneoR = new TorneoRepository();
+
+    //retorno
+    var retorno = new List<Grupo>();
+
+    //Informacion del torneo
+    var infoTorneo = torneoR.getById(torneoID);
+
+    //Consultamos la config del torneo para saber si aplica la separacion de grupos
+    var dividirGrupos = infoTorneo.dividirRR ?? false;
+
+    //Buscamos a las parejas registrados
+    var parejasRegistradas = equipoR.getXTorneo(torneoID);
+
+    if (dividirGrupos == true)
+    {
+        var noGruposRR = infoTorneo.noGruposRR ?? 2;
+
+        for (int i = 0; i < noGruposRR; i++)
+        {
+            var equiposGrupo = parejasRegistradas.Where(p => p.grupoRR == (19283891 + i)).ToList();
+
+            var item = new Grupo
+            {
+                id = 19283891 + i,
+                nombre = $"GRUPO {i + 1} de {equiposGrupo.Count} PAREJAS",
+                equiposGrupo = equiposGrupo
+            };
+
+            retorno.Add(item);
+        }
+    }
+    else
+    {
+        var equiposTodos = parejasRegistradas.Where(p => p.grupoRR == 19283890).ToList();
+
+        var item = new Grupo();
+
+        item.id = 19283890;
+        item.nombre = $"GRUPO GRAL {equiposTodos.Count} PAREJAS";
+        item.equiposGrupo = equiposTodos;
+
+        retorno.Add(item);
+
+    }
+
+    return retorno;
+}
+
+Ahora el modelo equipo esta compuesto de la siguiente manera
+
+La tabla se llama asi en la base de datos sportmob_v2.equipo
+
+Descripción:
+Representa una pareja o equipo inscrito en un torneo y asignado a un grupo específico.
+
+Relaciones:
+- Torneo -> torneo.id
+- Grupo -> null
+- Categoria -> null
+
+Campos principales:
+
+Identificación
+- id (INT, PK)
+- nombreEquipo (VARCHAR)
+- alias (VARCHAR)
+- claveEquipo (VARCHAR)
+
+Relaciones
+- Torneo (INT)
+- Grupo (INT)
+- Categoria (INT)
+
+Información visual
+- fotoEquipo (VARCHAR)
+- fotoEquipo2 (VARCHAR)
+- fotoUniforme (VARCHAR)
+
+Registro
+- fechaRegistroEquipo (DATETIME)
+- cuentaId (INT)
+
+Estado de inscripción
+- jugadoresPagados (INT)
+- modoPago (VARCHAR)
+- importe (DOUBLE)
+- pagado (TINYINT)
+- estadoRegistroParejas (VARCHAR)
+
+Estado deportivo
+- eliminado (TINYINT)
+- baja (TINYINT)
+- clasificado (TINYINT)
+
+Estadísticas
+- juegosJugados (INT)
+- juegosGanados (INT)
+- juegosEmpatados (INT)
+- juegosPerdidos (INT)
+- golesAFavor (DOUBLE)
+- golesEnContra (DOUBLE)
+- diferenciaDeGoles (DOUBLE)
+- puntos (DOUBLE)
+- puntosRanking (INT)
+- ptsExtrasOAmosnetacion (DOUBLE)
+
+Round Robin
+- grupoRR (INT)
+
+Control
+- ultimaModificacion (DATETIME)
+- idUsuario (INT)
+- usuarioC (INT)
+
+
+si notas en esta parte del codigo
+
+var parejasRegistradas = equipoR.getXTorneo(torneoID);
+
+es un query que se hace de la siguiente forma
+_session.Query<Equipo>().Where(x => x.baja == false &&
+                                                        x.Torneo.id == torneoID
+                                                        ).ToList()
+
+
+Para poder buscar a un jugador en relacion a un equipo se hace atraves de una tabla como la siguiente
+
+La tabla se llama asi en la base de datos sportmob_v2.jugadorequipo
+
+Descripción:
+Tabla puente que relaciona jugadores con equipos (parejas).
+
+Relaciones:
+- jugadorID -> jugador.id
+- equipoID -> equipo.id
+
+Campos:
+- id (INT, PK)
+- jugadorID (INT)
+- equipoID (INT)
+
+
+Para poder buscar la disponibilidad de cada jugador para el torneo se busca a traves de una tabla
+
+La tabla se llama sportmob_v2.TorneoDisponibilidadJugador;
+
+Descripción:
+Almacena los horarios en los que un jugador indica que puede participar dentro de un torneo específico.
+
+Relaciones:
+- idTorneo -> torneo.id
+- idJugador -> jugador.id
+
+Campos:
+- id (INT, PK)
+- idTorneo (INT)
+- idJugador (INT)
+- fecha (DATETIME)
+- hora (VARCHAR(50))
+- alta (DATETIME)
+
+Índices:
+- idx_torneo (idTorneo)
+- idx_jugador (idJugador)
+- idx_torneo_jugador (idTorneo, idJugador)
+
+
+Un jugador puede registrar múltiples disponibilidades pero estos van acorde alas disponibilidades de los espacios.
+
+Ejemplo:
+
+Jugador -> 100
+Torneo -> 50
+fecha -> 2026-06-15 00:00:00 --> este contiene el dia como esta en la tabla de fechas en relacion a cancha
+hora -> 20:00 o No puedo
+
+
+Ahora la estructura en bd de un partido esta de la siguiente forma
+
+La tabla se llama sportmob_v2.partidosjornadas;
+
+Descripción:
+Representa un partido programado entre dos equipos dentro de un torneo.
+
+Relaciones:
+- idJornada -> jornada.id
+- idEquipo1 -> equipo.id
+- idEquipo2 -> equipo.id
+- lugar -> cancha.id ocupa el id de la cancha
+- grupoID -> grupo.id -> esta es la que va a ser la referencia a getParejasRRByTorneo que son los grupos del torneo
+
+Campos principales:
+
+Identificación
+- id (INT, PK)
+
+Participantes
+- idEquipo1 (INT)
+- idEquipo2 (INT)
+- grupoID (INT) -> esta es la que va a ser la referencia a getParejasRRByTorneo que son los grupos del torneo
+
+Programación
+- fechaHoraPartido (DATETIME)
+- hora (VARCHAR)
+- lugar (INT)
+- etiquetaCancha (VARCHAR)
+
+Resultado
+- marcadorEquipo1 (INT)
+- marcadorEquipo2 (INT)
+- estadoPartido (VARCHAR)
+
+Control
+- tipoPartido (VARCHAR)
+- partidoSugerido (TINYINT)
+- modificadoManual (TINYINT)
+- currentStatePadel (VARCHAR)
+
+
+Restricciones de Calendarización
+- Los partidos únicamente pueden ocurrir entre equipos del mismo grupo.
+- Nunca pueden existir enfrentamientos entre grupos distintos.
+- La disponibilidad de una pareja se obtiene mediante la intersección de sus jugadores.
+- Un partido solamente puede programarse cuando existe una intersección entre:
+     Disponibilidad Equipo A
+     Disponibilidad Equipo B
+     Slot disponible
+- Un slot solamente puede contener un partido.
+- Una pareja NO puede jugar dos partidos en el mismo horario.
+- Una pareja SÍ puede jugar múltiples partidos el mismo día siempre que los horarios sean distintos.
+- Los partidos pueden adelantarse si existe disponibilidad y hay slots libres.
+- No es obligatorio respetar jornadas rígidas.
+- El objetivo principal es completar la mayor cantidad posible de partidos
