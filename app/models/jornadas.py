@@ -37,5 +37,5 @@ class Jornadas(Base):
     usuarioC = Column(Integer, nullable=True)
     cuentaId = Column(Integer, nullable=True)
 
-    torneo = relationship("Torneo", back_populates="jornadas")
-    #partidos_jornada = relationship("PartidosJornadas", back_populates="jornada")
+    torneo_rel = relationship("Torneo", foreign_keys=[torneo])
+    partidos_jornada = relationship("PartidosJornadas", back_populates="jornada")

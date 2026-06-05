@@ -67,6 +67,6 @@ class Torneo(Base):
     showWebView = Column(Boolean, nullable=True)
     urlTorneo = Column(String(500), nullable=True)
 
-    #equipos = relationship("Equipo", back_populates="torneo")
-    #disponibilidades_jugadores = relationship("TorneoDisponibilidadJugador", back_populates="torneo")
-    #jornadas = relationship("Jornadas", back_populates="torneo")
+    equipos = relationship("Equipo", back_populates="torneo")
+    disponibilidades_jugadores = relationship("TorneoDisponibilidadJugador", back_populates="torneo")
+    jornadas = relationship("Jornadas", back_populates="torneo_rel")

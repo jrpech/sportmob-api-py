@@ -55,7 +55,7 @@ class Equipo(Base):
     idUsuario = Column(Integer, nullable=True)
     usuarioC = Column(Integer, nullable=True)
 
-    torneo = relationship("Torneo", back_populates="equipos")
-    #jugadores_equipo = relationship("JugadorEquipo", back_populates="equipo", cascade="all, delete-orphan")
-    #partidos_local = relationship("PartidosJornadas", foreign_keys="PartidosJornadas.idEquipo1", back_populates="equipo1")
-    #partidos_visitante = relationship("PartidosJornadas", foreign_keys="PartidosJornadas.idEquipo2", back_populates="equipo2")
+    torneo = relationship("Torneo")
+    jugadores_equipo = relationship("JugadorEquipo", back_populates="equipo", cascade="all, delete-orphan")
+    partidos_local = relationship("PartidosJornadas", foreign_keys="PartidosJornadas.idEquipo1", back_populates="equipo1")
+    partidos_visitante = relationship("PartidosJornadas", foreign_keys="PartidosJornadas.idEquipo2", back_populates="equipo2")

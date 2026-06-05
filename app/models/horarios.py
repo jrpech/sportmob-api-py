@@ -16,4 +16,4 @@ class Horarios(Base):
     horario = Column(String(150), nullable=True)
     fechaID = Column(Integer, ForeignKey("fechas.id"), nullable=True, index=True)
 
-    fecha = relationship("Fechas", back_populates="bloques_horarios")
+    fecha = relationship("Fechas")

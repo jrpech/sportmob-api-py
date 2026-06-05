@@ -14,7 +14,7 @@ class PartidosJornadas(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    idJornada = Column(Integer, ForeignKey("jornadas.Id"), nullable=True, index=True)
+    idJornada = Column(Integer, ForeignKey("jornadas.id"), nullable=True, index=True)
 
     idEquipo1 = Column(Integer, ForeignKey("equipo.id"), nullable=True, index=True)
     idEquipo2 = Column(Integer, ForeignKey("equipo.id"), nullable=True, index=True)
