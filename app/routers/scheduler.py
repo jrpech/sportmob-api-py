@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -329,6 +330,10 @@ def programar_partidos_greedy_endpoint(
             db.query(TorneoDisponibilidadJugador)
             .filter(TorneoDisponibilidadJugador.idTorneo.in_(torneo_ids))
             .filter(TorneoDisponibilidadJugador.idJugador.in_(jugador_ids))
+            .filter(
+                (TorneoDisponibilidadJugador.hora.is_(None))
+                | (func.lower(func.trim(TorneoDisponibilidadJugador.hora)) != "no puedo")
+            )
             .all()
             if jugador_ids
             else []
