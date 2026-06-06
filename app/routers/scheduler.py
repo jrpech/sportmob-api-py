@@ -342,7 +342,11 @@ def programar_partidos_greedy_endpoint(
 
         disponibilidad_jugador_index = construir_disponibilidad_jugador(disponibilidades_jugador)
         disponibilidad_equipo = construir_disponibilidad_equipo(equipos_dto, disponibilidad_jugador_index)
-        disponibilidad_partido = construir_disponibilidad_partido(partidos, disponibilidad_equipo)
+        disponibilidad_partido = (
+            construir_disponibilidad_partido(partidos, disponibilidad_equipo)
+            if disponibilidades_db
+            else None
+        )
 
         resultado = programar_partidos_greedy(
             partidos=partidos,

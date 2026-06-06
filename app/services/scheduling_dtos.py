@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date, datetime
 from enum import Enum
+import random
 from typing import Any, DefaultDict, Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field
@@ -164,12 +165,13 @@ def _espacio_en_rango_torneo(espacio: Espacio, rango: RangoFechaTorneo) -> bool:
 def programar_partidos_greedy(
     partidos: List[Partido],
     espacios: List[Espacio],
-    disponibilidad_partido: Dict[str, Set[int]],
+    disponibilidad_partido: Optional[Dict[str, Set[int]]],
     rangos_torneo: Dict[int, RangoFechaTorneo],
 ) -> ResultadoCalendario:
     """Asigna partidos con estrategia greedy: menor factibilidad y espacio cronologico."""
 
     espacios_por_id: Dict[int, Espacio] = {espacio.espacio_id: espacio for espacio in espacios}
+    usar_fallback_aleatorio = not disponibilidad_partido
     espacios_ordenados = sorted(espacios, key=lambda e: e.fecha_hora)
     espacios_utilizados_ids: Set[int] = set()
     equipos_ocupados_por_fecha_hora: DefaultDict[datetime, Set[int]] = defaultdict(set)
@@ -178,7 +180,11 @@ def programar_partidos_greedy(
     motivo_base_por_partido: Dict[str, MotivoPartidoPendiente] = {}
 
     for partido in partidos:
-        espacios_factibles_ids = disponibilidad_partido.get(partido.partido_id, set())
+        if usar_fallback_aleatorio:
+            espacios_factibles_ids = set(espacios_por_id.keys())
+        else:
+            espacios_factibles_ids = disponibilidad_partido.get(partido.partido_id, set())
+
         if not espacios_factibles_ids:
             candidatos_por_partido[partido.partido_id] = []
             motivo_base_por_partido[partido.partido_id] = MotivoPartidoPendiente.sin_disponibilidad_4_jugadores
@@ -206,16 +212,24 @@ def programar_partidos_greedy(
             motivo_base_por_partido[partido.partido_id] = MotivoPartidoPendiente.fuera_rango_torneo
             continue
 
-        candidatos_por_partido[partido.partido_id] = sorted(espacios_en_rango, key=lambda e: e.fecha_hora)
+        if usar_fallback_aleatorio:
+            random.shuffle(espacios_en_rango)
+            candidatos_por_partido[partido.partido_id] = espacios_en_rango
+        else:
+            candidatos_por_partido[partido.partido_id] = sorted(espacios_en_rango, key=lambda e: e.fecha_hora)
 
-    partidos_ordenados = sorted(
-        partidos,
-        key=lambda p: (
-            len(candidatos_por_partido.get(p.partido_id, [])),
-            candidatos_por_partido[p.partido_id][0].fecha_hora if candidatos_por_partido.get(p.partido_id) else datetime.max,
-            p.partido_id,
-        ),
-    )
+    if usar_fallback_aleatorio:
+        partidos_ordenados = partidos[:]
+        random.shuffle(partidos_ordenados)
+    else:
+        partidos_ordenados = sorted(
+            partidos,
+            key=lambda p: (
+                len(candidatos_por_partido.get(p.partido_id, [])),
+                candidatos_por_partido[p.partido_id][0].fecha_hora if candidatos_por_partido.get(p.partido_id) else datetime.max,
+                p.partido_id,
+            ),
+        )
 
     resultado = ResultadoCalendario()
 
