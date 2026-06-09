@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -33,6 +33,26 @@ class PartidosJornadas(Base):
     partidoSugerido = Column(Boolean, nullable=True)
     modificadoManual = Column(Boolean, nullable=True)
     currentStatePadel = Column(String(100), nullable=True)
+
+    fechaHoraInicioPartido = Column(DateTime, nullable=True)
+    fechaHoraFinPrimerTiempo = Column(DateTime, nullable=True)
+    fechaHoraInicioSegundoTiempo = Column(DateTime, nullable=True)
+    fechaHoraFinPartido = Column(DateTime, nullable=True)
+    fechaHoraPausa = Column(DateTime, nullable=True)
+    pausaAcumuladaPrimerTiempo = Column(Float, nullable=True)
+    pausaAcumuladaSegundoTiempo = Column(Float, nullable=True)
+    bajaPartido = Column(Boolean, nullable=True)
+    ultimaModificacion = Column(DateTime, nullable=True)
+    fechaHoraTiemposExtra = Column(DateTime, nullable=True)
+    fechaHora1erTiempoExtra = Column(DateTime, nullable=True)
+    fechaHora2doTiempoExtra = Column(DateTime, nullable=True)
+    descanso1erTiempoExtra = Column(DateTime, nullable=True)
+    pausaAcumulada1erTiempoExtra = Column(Float, nullable=True)
+    pausaAcumulada2doTiempoExtra = Column(Float, nullable=True)
+    etiquetaCancha = Column(String(255), nullable=True)
+    noPartidoPadel = Column(Integer, nullable=True)
+        
+
 
     jornada = relationship("Jornadas", back_populates="partidos_jornada")
     equipo1 = relationship("Equipo", foreign_keys=[idEquipo1], back_populates="partidos_local")
