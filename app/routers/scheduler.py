@@ -752,12 +752,17 @@ def programar_partidos_greedy_por_calendar_endpoint(
                 if grupo.torneo_id != torneo:
                     continue
 
-                partidos_grupo = resultado.partidos_asignados.where(lambda item: item["torneo_id"] == torneo and item["grupo_id"] == grupo.grupo_id)
+                partidos_grupo = [
+                    item
+                    for item in resultado.partidos_asignados
+                    if item["torneo_id"] == torneo
+                    and item["grupo_id"] == grupo.grupo_id
+                ]
 
                 fechas = [
-                    datetime.fromisoformat(partido["fecha"])
-                    for partido in partidos_grupo
-                ]
+                            partido["fecha"]
+                            for partido in partidos_grupo
+                        ]
 
                 fecha_inicio = min(fechas)
                 fecha_fin = max(fechas)
@@ -792,9 +797,7 @@ def programar_partidos_greedy_por_calendar_endpoint(
                         idJornada=jornada.id,
                         idEquipo1=partido_asignado["equipo_a_id"],
                         idEquipo2=partido_asignado["equipo_b_id"],
-                        fechaHoraPartido=datetime.fromisoformat(
-                                                partido_asignado["fecha"]
-                                            ),
+                        fechaHoraPartido=partido_asignado["fecha"],
                         lugar = partido_asignado["cancha_id"],
                         hora = partido_asignado["hora"],
                         marcadorEquipo1 = 0,
@@ -816,8 +819,8 @@ def programar_partidos_greedy_por_calendar_endpoint(
                         pausaAcumulada1erTiempoExtra = 0.0,
                         pausaAcumulada2doTiempoExtra = 0.0,
                         etiquetaCancha = (
-                                            f"{canchaPartido.nombre} - "
-                                            f"{datetime.fromisoformat(partido_asignado['fecha']).strftime('%d/%m/%Y')} - "
+                                            f"{canchaPartido.nombreCancha} - "
+                                            f"{partido_asignado['fecha'].strftime('%d/%m/%Y')} - "
                                             f"{partido_asignado['hora']}"
                                         ) if canchaPartido else "",
                         noPartidoPadel = 0,
@@ -825,6 +828,62 @@ def programar_partidos_greedy_por_calendar_endpoint(
                     )
                     db.add(partido)
                     db.flush()
+                    partido_asignado["partido_id"] = str(partido.id)
+
+                for partido_pendiente in resultado.partidos_pendientes:
+                    if partido_pendiente.partido.torneo_id != torneo or partido_pendiente.partido.grupo_id != grupo.grupo_id:
+                        continue
+                    partido = PartidosJornadas(
+                        idJornada=jornada.id,
+                        idEquipo1=partido_pendiente.partido.equipo_a_id,
+                        idEquipo2=partido_pendiente.partido.equipo_b_id,
+                        fechaHoraPartido="0001-01-01 00:00:00",
+                        lugar = None,
+                        hora = None,
+                        marcadorEquipo1 = 0,
+                        marcadorEquipo2 = 0,
+                        estadoPartido="POR JUGAR",
+                        fechaHoraInicioPartido = "0001-01-01 00:00:00", 
+                        fechaHoraFinPrimerTiempo = "0001-01-01 00:00:00",
+                        fechaHoraInicioSegundoTiempo = "0001-01-01 00:00:00",
+                        fechaHoraFinPartido = "0001-01-01 00:00:00",
+                        fechaHoraPausa = "0001-01-01 00:00:00",
+                        pausaAcumuladaPrimerTiempo = 0.0,
+                        pausaAcumuladaSegundoTiempo = 0.0,  
+                        bajaPartido = False,
+                        ultimaModificacion = datetime.now(),
+                        fechaHoraTiemposExtra = "0001-01-01 00:00:00",
+                        fechaHora1erTiempoExtra = "0001-01-01 00:00:00",
+                        fechaHora2doTiempoExtra = "0001-01-01 00:00:00",
+                        descanso1erTiempoExtra = "0001-01-01 00:00:00",
+                        pausaAcumulada1erTiempoExtra = 0.0,
+                        pausaAcumulada2doTiempoExtra = 0.0,
+                        etiquetaCancha = "",
+                        noPartidoPadel = 0,
+                        grupoID = grupo.grupo_id,                  
+                    )
+                    db.add(partido)
+                    db.flush()
+
+        # Procedemos a guardar sobre RelationsCalendar los partidos programados en los espacios para marcar que ya no estan disponibles
+        for partido_asignado in resultado.partidos_asignados:
+            relacion = (
+                db.query(RelationsCalendar)
+                .filter(
+                    RelationsCalendar.calendarID == calendarID,
+                    RelationsCalendar.canchaID == partido_asignado["cancha_id"],
+                    RelationsCalendar.fecha == partido_asignado["fecha"],
+                    RelationsCalendar.hora == partido_asignado["hora"]
+                )
+                .first()
+            )
+
+            if relacion:
+                relacion.partidoID = int(partido_asignado["partido_id"])
+
+        db.flush()
+        db.commit()
+                      
 
         return BaseResponse(
             respuesta="OK",
@@ -832,6 +891,7 @@ def programar_partidos_greedy_por_calendar_endpoint(
             data=resultado,
         )
     except Exception as ex:
+        db.rollback()
         return BaseResponse(
             respuesta="ERROR",
             mensaje=str(ex),
