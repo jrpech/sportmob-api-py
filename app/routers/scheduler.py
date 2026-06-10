@@ -589,12 +589,13 @@ def programar_partidos_greedy_endpoint(
         )
 
 
-@router.get("/programarPartidosGreedyPorCalendar", response_model=BaseResponse)
+@router.post("/programarPartidosGreedyPorCalendar", response_model=BaseResponse)
 def programar_partidos_greedy_por_calendar_endpoint(
     calendarID: int,
     db: Session = Depends(get_db),
 ):
     try:
+
         config_calendar = db.query(ConfigCalendar).filter(ConfigCalendar.id == calendarID).first()
         if config_calendar is None:
             return BaseResponse(
@@ -626,6 +627,15 @@ def programar_partidos_greedy_por_calendar_endpoint(
                 mensaje="No se econtraron torneos",
                 data=None,
             )
+        
+        #Borramos los partidos relacionos desde jornada
+        jornadas = db.query(Jornadas).filter(Jornadas.torneo.in_(torneos_ids)).all()
+        for jornada in jornadas:
+            partidos_jornada = db.query(PartidosJornadas).filter(PartidosJornadas.idJornada == jornada.id).all()
+            for partido in partidos_jornada:
+                db.delete(partido)
+            db.delete(jornada)
+        db.flush()
 
         rangos_torneo: Dict[int, Tuple[date, date]] = {}
         for torneo in torneos:
@@ -650,6 +660,11 @@ def programar_partidos_greedy_por_calendar_endpoint(
                 mensaje="No se encontraron espacios disponibles para este calendario",
                 data=None,
             )
+        
+        #Limpiamos los partidoID que tengan las relaciones para volver a asignarlos
+        for relacion in relaciones:
+            relacion.partidoID = None
+        db.flush()
 
         canchas_ids = sorted({relacion.canchaID for relacion in relaciones})
         canchas_db = db.query(Cancha).filter(Cancha.ID.in_(canchas_ids)).all() if canchas_ids else []
